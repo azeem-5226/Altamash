@@ -311,6 +311,151 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #8b5cf6;
         }
+
+        /* --- Storytelling Animation Styles --- */
+        
+        /* Scene 1: Shoot */
+        .videographer-wrapper {
+            position: absolute;
+            left: -100px;
+            bottom: 30%;
+            transform: translateY(50%);
+            animation: walkIn 10s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+        }
+        .videographer-char {
+            position: relative;
+            animation: bounceWalk 0.5s infinite alternate;
+        }
+        .camera-flash {
+            position: absolute;
+            top: -100%; left: -100%; width: 300%; height: 300%;
+            background: #fff;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+            animation: flashEffect 10s infinite;
+        }
+
+        /* Scene 2: Edit */
+        #scene-edit {
+            opacity: 0;
+            visibility: hidden;
+            animation: revealEdit 10s infinite;
+        }
+        #scene-shoot {
+            animation: hideShoot 10s infinite;
+        }
+
+        /* Timeline */
+        .playhead {
+            position: absolute;
+            top: 0;
+            left: 2%;
+            height: 100%;
+            z-index: 10;
+            animation: movePlayhead 10s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .playhead-top {
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #ef4444; 
+            transform: translateX(-5px);
+        }
+        .playhead-line {
+            width: 2px;
+            height: 100%;
+            background: #ef4444;
+            transform: translateX(-1px);
+            box-shadow: 0 0 5px rgba(239,68,68,0.5);
+        }
+
+        .clip {
+            height: 100%;
+        }
+        .clip-1 { width: 35%; }
+        .clip-2 { width: 40%; }
+        .clip-3 { width: 25%; }
+
+        .audio-track-container {
+            gap: 2px;
+        }
+        .audio-wave {
+            flex: 1;
+            background: #10b981; 
+            border-radius: 1px;
+            opacity: 0.8;
+            animation: waveBounce 0.5s infinite alternate;
+        }
+        .audio-wave:nth-child(even) { animation-duration: 0.4s; }
+        .audio-wave:nth-child(3n) { animation-duration: 0.6s; animation-delay: 0.1s; }
+        .audio-wave:nth-child(5n) { animation-duration: 0.3s; animation-delay: 0.2s; }
+        .audio-wave:nth-child(7n) { animation-duration: 0.7s; animation-delay: 0.3s; }
+
+        .render-progress {
+            width: 0%;
+            animation: renderLoad 10s infinite linear;
+        }
+        .render-percentage {
+            animation: percentageFade 10s infinite;
+        }
+        .preview-render-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(16, 185, 129, 0.2); 
+            opacity: 0;
+            animation: showRenderOverlay 10s infinite;
+        }
+
+        @keyframes walkIn {
+            0% { left: -10%; opacity: 1; transform: scale(1); }
+            15% { left: 45%; opacity: 1; transform: scale(1); }
+            20% { left: 45%; opacity: 1; transform: scale(1.1); } 
+            100% { left: 45%; opacity: 1; transform: scale(1.1); }
+        }
+        @keyframes bounceWalk {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-15px); }
+        }
+        @keyframes flashEffect {
+            0%, 19% { opacity: 0; }
+            20% { opacity: 1; }
+            22% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+        @keyframes hideShoot {
+            0%, 20% { opacity: 1; visibility: visible; }
+            21%, 100% { opacity: 0; visibility: hidden; }
+        }
+        @keyframes revealEdit {
+            0%, 20% { opacity: 0; visibility: hidden; transform: scale(0.9); }
+            22% { opacity: 1; visibility: visible; transform: scale(1); }
+            85% { opacity: 1; visibility: visible; transform: scale(1); }
+            90%, 100% { opacity: 0; visibility: hidden; transform: scale(0.9); }
+        }
+        @keyframes movePlayhead {
+            0%, 25% { left: 2%; }
+            75%, 100% { left: 98%; }
+        }
+        @keyframes waveBounce {
+            0% { height: 20%; }
+            100% { height: 90%; }
+        }
+        @keyframes renderLoad {
+            0%, 25% { width: 0%; }
+            75%, 100% { width: 100%; }
+        }
+        @keyframes showRenderOverlay {
+            0%, 75% { opacity: 0; backdrop-filter: blur(0px); }
+            76%, 85% { opacity: 1; backdrop-filter: blur(4px); }
+            100% { opacity: 0; }
+        }
+        @keyframes percentageFade {
+            0%, 74% { opacity: 0; }
+            75%, 85% { opacity: 1; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 
@@ -855,6 +1000,87 @@
                             Fast Paced Reel</h3>
                         <p class="text-sm text-gray-400">A high-energy, fast-paced social media reel engineered for TikTok and Instagram with trendy transitions.</p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Storytelling Animation Section -->
+    <section id="workflow-animation" class="py-16 relative overflow-hidden bg-darker border-t border-white/5">
+        <div class="text-center mb-10 reveal active">
+            <h2 class="text-3xl md:text-5xl font-display font-bold mb-4">
+                The <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-purple-400">Process</span>
+            </h2>
+            <p class="text-gray-400 max-w-2xl mx-auto">From capturing the perfect shot to crafting the final cut.</p>
+        </div>
+
+        <div class="container mx-auto px-6 relative w-full max-w-4xl h-[400px] flex items-center justify-center">
+            <!-- Scene 1: The Shoot -->
+            <div id="scene-shoot" class="absolute inset-0 flex items-center justify-center">
+                <div class="videographer-wrapper">
+                    <div class="videographer-char relative">
+                        <i class="fas fa-person text-6xl text-gray-300"></i>
+                        <div class="absolute top-2 -right-6 text-accent animate-pulse">
+                            <i class="fas fa-video text-4xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The Flash -->
+            <div class="camera-flash z-50"></div>
+
+            <!-- Scene 2: The Edit -->
+            <div id="scene-edit" class="absolute inset-0 w-full max-w-3xl mx-auto h-full max-h-[350px] bg-[#1e1e1e] rounded-xl border border-white/10 shadow-[0_0_50px_rgba(139,92,246,0.1)] p-4 flex flex-col justify-between">
+                
+                <!-- Video Preview Mockup -->
+                <div class="flex-1 w-full bg-black rounded-lg mb-4 flex items-center justify-center overflow-hidden relative border border-white/5">
+                    <i class="fas fa-play text-4xl text-white/10"></i>
+                    <div class="preview-render-overlay flex flex-col items-center justify-center">
+                        <i class="fas fa-check-circle text-4xl text-green-400 mb-2"></i>
+                        <div class="render-text text-green-400 font-bold tracking-widest uppercase text-sm">Render Complete</div>
+                    </div>
+                </div>
+
+                <!-- Timeline Interface -->
+                <div class="timeline-container relative w-full h-36 bg-[#181818] rounded-lg p-3 border border-white/5 flex flex-col justify-end">
+                    
+                    <!-- Time ruler -->
+                    <div class="absolute top-0 left-0 w-full h-5 border-b border-white/10 flex justify-between px-2 text-[8px] text-gray-500 pt-1">
+                        <span>00:00</span><span>00:15</span><span>00:30</span><span>00:45</span><span>01:00</span>
+                    </div>
+
+                    <!-- Playhead -->
+                    <div class="playhead">
+                        <div class="playhead-top"></div>
+                        <div class="playhead-line"></div>
+                    </div>
+
+                    <!-- Video Track -->
+                    <div class="track mb-2 flex gap-1 h-10 w-full bg-black/30 p-1 rounded">
+                        <div class="clip clip-1 bg-indigo-500/80 rounded border border-indigo-400 flex items-center px-2 overflow-hidden"><i class="fas fa-film text-white/50 text-xs"></i></div>
+                        <div class="clip clip-2 bg-purple-500/80 rounded border border-purple-400 flex items-center px-2 overflow-hidden"><i class="fas fa-film text-white/50 text-xs"></i></div>
+                        <div class="clip clip-3 bg-blue-500/80 rounded border border-blue-400 flex items-center px-2 overflow-hidden"><i class="fas fa-film text-white/50 text-xs"></i></div>
+                    </div>
+
+                    <!-- Audio Track -->
+                    <div class="track audio-track-container w-full flex justify-between items-end h-8 bg-black/30 p-1 rounded">
+                        <div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div>
+                        <div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div>
+                        <div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div>
+                        <div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div>
+                        <div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div>
+                        <div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div><div class="audio-wave"></div>
+                    </div>
+                </div>
+
+                <!-- Render Progress Bar -->
+                <div class="mt-3 flex items-center gap-3">
+                    <span class="text-xs text-gray-400 font-mono">Rendering...</span>
+                    <div class="render-bar-container flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div class="render-progress h-full bg-gradient-to-r from-accent to-purple-400 shadow-[0_0_10px_rgba(139,92,246,0.5)]"></div>
+                    </div>
+                    <span class="render-percentage text-xs text-accent font-mono font-bold">100%</span>
                 </div>
             </div>
         </div>
