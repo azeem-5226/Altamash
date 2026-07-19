@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Altamash | Video Editor</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accent: '#8b5cf6', // Violet/Neon Purple
+                        dark: '#0f172a',
+                        darker: '#020617',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #020617;
+            color: #f8fafc;
+            overflow-x: hidden;
+            cursor: none;
+            /* Hide default cursor for custom cursor */
+        }
+
+        /* Reset cursor for mobile devices */
+        @media (max-width: 768px) {
+            body {
+                cursor: auto;
+            }
+
+            .cursor-dot,
+            .cursor-outline {
+                display: none !important;
+            }
+        }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Custom Cursor */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #8b5cf6;
+        }
+
+        .cursor-outline {
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(139, 92, 246, 0.6);
+            transition: width 0.15s, height 0.15s, background-color 0.15s;
+        }
+
+        /* Scroll Reveal Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .reveal-left.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(40px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .reveal-right.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .delay-100 {
+            transition-delay: 100ms;
+        }
+
+        .delay-200 {
+            transition-delay: 200ms;
+        }
+
+        .delay-300 {
+            transition-delay: 300ms;
+        }
+
+        /* Floating Label Form Inputs */
+        .relative-input {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .floating-input {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 1rem 1rem;
+            width: 100%;
+            border-radius: 0.5rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .floating-input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 1px #8b5cf6;
+        }
+
+        .floating-label {
+            position: absolute;
+            left: 1rem;
+            top: 1rem;
+            color: rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            transition: 0.2s ease all;
+            font-size: 1rem;
+        }
+
+        .floating-input:focus~.floating-label,
+        .floating-input:not(:placeholder-shown)~.floating-label {
+            top: -0.6rem;
+            left: 0.8rem;
+            font-size: 0.8rem;
+            background: #0f172a;
+            padding: 0 0.4rem;
+            color: #8b5cf6;
+            border-radius: 0.25rem;
+        }
+
+        /* Animated Blob Background */
+        .blob-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .blob {
+            position: absolute;
+            filter: blur(90px);
+            opacity: 0.4;
+            border-radius: 50%;
+            animation: float 12s infinite ease-in-out;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: rgba(139, 92, 246, 0.4);
+            max-width: 600px;
+            max-height: 600px;
+        }
+
+        .blob-2 {
+            bottom: 10%;
+            right: -5%;
+            width: 50vw;
+            height: 50vw;
+            background: rgba(59, 130, 246, 0.3);
+            max-width: 500px;
+            max-height: 500px;
+            animation-delay: -6s;
+        }
+
+        .blob-3 {
+            top: 40%;
+            left: 30%;
+            width: 40vw;
+            height: 40vw;
+            background: rgba(236, 72, 153, 0.2);
+            max-width: 400px;
+            max-height: 400px;
+            animation-delay: -3s;
+            animation-duration: 15s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+        }
+
+        /* Portfolio Filters & Cards */
+        .filter-btn {
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background-color: #8b5cf6;
+            color: white;
+            border-color: #8b5cf6;
+        }
+
+        .portfolio-item {
+            transition: all 0.5s ease;
+        }
+
+        .portfolio-item.hidden-item {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+            position: absolute;
+        }
+
+        /* Skill Bar Animation */
+        .skill-progress {
+            width: 0;
+            transition: width 1.5s cubic-bezier(0.1, 0.5, 0.1, 1);
+        }
+
+        /* Lightbox Modal */
+        #lightbox {
+            transition: opacity 0.3s ease;
+        }
+
+        #lightbox.open {
+            display: flex;
+            opacity: 1;
+            z-index: 100;
+        }
+
+        #lightbox:not(.open) {
+            opacity: 0;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b5cf6;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased selection:bg-accent selection:text-white relative">
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Animated Background -->
+    <div class="blob-container">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 py-5">
+        <div class="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
+            <!-- Logo -->
+            <a href="#home"
+                class="font-display font-bold text-2xl tracking-tighter text-white hover:text-accent transition-colors z-50">
+                EDIT<span class="text-accent">X</span>
+            </a>
+
+            <!-- Desktop Nav -->
+            <div class="hidden md:flex space-x-8">
+                <a href="#home"
+                    class="nav-link text-accent text-sm uppercase tracking-widest font-medium transition-colors">Home</a>
+                <a href="#work"
+                    class="nav-link text-gray-300 hover:text-white text-sm uppercase tracking-widest font-medium transition-colors">Work</a>
+                <a href="#about"
+                    class="nav-link text-gray-300 hover:text-white text-sm uppercase tracking-widest font-medium transition-colors">About</a>
+                <a href="#contact"
+                    class="nav-link text-gray-300 hover:text-white text-sm uppercase tracking-widest font-medium transition-colors">Contact</a>
+            </div>
+
+            <!-- Mobile Menu Btn -->
+            <button id="mobile-menu-btn"
+                class="md:hidden text-gray-300 hover:text-white z-50 focus:outline-none cursor-pointer">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Nav Overlay -->
+        <div id="mobile-nav"
+            class="fixed inset-0 bg-darker/95 backdrop-blur-lg flex flex-col items-center justify-center space-y-8 opacity-0 pointer-events-none transition-opacity duration-300 z-40">
+            <a href="#home"
+                class="mobile-link text-2xl font-display text-white hover:text-accent transition-colors">Home</a>
+            <a href="#work"
+                class="mobile-link text-2xl font-display text-white hover:text-accent transition-colors">Work</a>
+            <a href="#about"
+                class="mobile-link text-2xl font-display text-white hover:text-accent transition-colors">About</a>
+            <a href="#contact"
+                class="mobile-link text-2xl font-display text-white hover:text-accent transition-colors">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center pt-20 relative px-6">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center w-full">
+            <div class="order-2 md:order-1 text-center md:text-left z-10">
+                <p class="text-accent font-medium tracking-widest uppercase mb-3 reveal-left">Hi, I'm Altamash</p>
+                <h1 class="text-5xl md:text-7xl font-display font-bold leading-tight mb-6 reveal-left delay-100">
+                    Crafting <span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-400">Cinematic</span><br>
+                    <span id="typewriter" class="border-r-4 border-accent pr-2 text-white"></span>
+                </h1>
+                <p class="text-gray-400 text-lg mb-8 max-w-lg mx-auto md:mx-0 reveal-left delay-200">
+                    I transform raw footage into compelling stories. Specializing in high-end commercials, YouTube
+                    content, and dynamic social media reels.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start reveal-left delay-300">
+                    <a href="#work"
+                        class="px-8 py-4 bg-accent text-white rounded-full font-medium hover:bg-purple-600 transition-all transform hover:scale-105 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] text-center">
+                        View My Work
+                    </a>
+                    <a href="#contact"
+                        class="px-8 py-4 bg-transparent border border-gray-500 text-white rounded-full font-medium hover:border-white hover:bg-white/5 transition-all text-center">
+                        Contact Me
+                    </a>
+                </div>
+            </div>
+
+            <div class="order-1 md:order-2 flex justify-center z-10 reveal-right">
+                <div class="relative w-64 h-64 md:w-96 md:h-96">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-tr from-accent to-blue-500 rounded-full blur-2xl opacity-40 animate-pulse">
+                    </div>
+                    <img src="public/WhatsApp%20Image%202026-07-19%20at%2011.39.09%20PM.jpeg"
+                        alt="Altamash - Video Editor"
+                        class="relative w-full h-full object-cover object-top rounded-full border-2 border-white/10 shadow-2xl z-10"
+                        style="animation: float 6s infinite ease-in-out;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Work Section -->
+    <section id="work" class="py-24 px-6 relative z-10 bg-darker/50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-4xl md:text-5xl font-display font-bold mb-4">Featured <span
+                        class="text-accent">Work</span></h2>
+                <div class="w-24 h-1 bg-accent mx-auto rounded-full mb-8"></div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button
+                        class="filter-btn active px-6 py-2 rounded-full border border-gray-600 text-sm font-medium hover:border-accent hover:text-accent cursor-pointer"
+                        data-filter="all">All</button>
+                    <button
+                        class="filter-btn px-6 py-2 rounded-full border border-gray-600 text-sm font-medium hover:border-accent hover:text-accent cursor-pointer"
+                        data-filter="reels">Reels</button>
+                    <button
+                        class="filter-btn px-6 py-2 rounded-full border border-gray-600 text-sm font-medium hover:border-accent hover:text-accent cursor-pointer"
+                        data-filter="youtube">YouTube</button>
+                    <button
+                        class="filter-btn px-6 py-2 rounded-full border border-gray-600 text-sm font-medium hover:border-accent hover:text-accent cursor-pointer"
+                        data-filter="commercial">Commercial</button>
+                </div>
+            </div>
+
+            <!-- Portfolio Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative" id="portfolio-grid">
+
+                <!-- Card 1 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal"
+                    data-category="commercial"
+                    onclick="openLightbox('public/Colors_ smiles and togetherness_ 🌸🎨_The amazing doctors and staff of Reigner Hospital came together to celebrate the festival of happiness – Holi. A(.mp4', 'Holi Celebration')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video
+                            src="public/Colors_ smiles and togetherness_ 🌸🎨_The amazing doctors and staff of Reigner Hospital came together to celebrate the festival of happiness – Holi. A(.mp4#t=0.1"
+                            muted loop playsinline onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">Commercial</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Holi Celebration</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal delay-100"
+                    data-category="reels" onclick="openLightbox('public/VID-20260412-WA0000.mp4', 'Creative Edit 1')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video src="public/VID-20260412-WA0000.mp4#t=0.1" muted loop playsinline
+                            onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">Reels</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Creative Edit 1</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal delay-200"
+                    data-category="youtube"
+                    onclick="openLightbox('public/lv_0_20251216231959.mp4', 'Motion Graphics 1')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video src="public/lv_0_20251216231959.mp4#t=0.1" muted loop playsinline
+                            onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">YouTube</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Motion Graphics 1</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+                <!-- Card 4 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal"
+                    data-category="commercial"
+                    onclick="openLightbox('public/lv_0_20251218084307.mp4', 'Cinematic Flow')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video src="public/lv_0_20251218084307.mp4#t=0.1" muted loop playsinline
+                            onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">Commercial</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Cinematic Flow</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+                <!-- Card 5 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal delay-100"
+                    data-category="reels" onclick="openLightbox('public/lv_0_20260424200123.mp4', 'Dynamic Cuts')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video src="public/lv_0_20260424200123.mp4#t=0.1" muted loop playsinline
+                            onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">Reels</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Dynamic Cuts</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+                <!-- Card 6 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal delay-200"
+                    data-category="youtube" onclick="openLightbox('public/lv_0_20260501100704.mp4', 'Short Film Edit')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video src="public/lv_0_20260501100704.mp4#t=0.1" muted loop playsinline
+                            onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">YouTube</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Short Film Edit</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+                <!-- Card 7 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal"
+                    data-category="commercial" onclick="openLightbox('public/lv_0_20260506085114.mp4', 'Vlog Style')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video src="public/lv_0_20260506085114.mp4#t=0.1" muted loop playsinline
+                            onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">Commercial</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Vlog Style</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+                <!-- Card 8 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal delay-100"
+                    data-category="reels" onclick="openLightbox('public/lv_0_20260521214342.mp4', 'Promo Video')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video src="public/lv_0_20260521214342.mp4#t=0.1" muted loop playsinline
+                            onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">Reels</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Promo Video</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+                <!-- Card 9 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal delay-200"
+                    data-category="youtube"
+                    onclick="openLightbox('public/lv_0_20260603224924.mp4', 'Event Highlights')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video src="public/lv_0_20260603224924.mp4#t=0.1" muted loop playsinline
+                            onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">YouTube</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Event Highlights</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+                <!-- Card 10 -->
+                <div class="portfolio-item glass-card rounded-2xl overflow-hidden group cursor-pointer reveal"
+                    data-category="commercial"
+                    onclick="openLightbox('public/lv_7613317446799265029_20260309124157.mp4', 'Fast Paced Reel')">
+                    <div class="relative overflow-hidden aspect-video bg-black flex justify-center">
+                        <video src="public/lv_7613317446799265029_20260309124157.mp4#t=0.1" muted loop playsinline
+                            onmouseenter="this.play()" onmouseleave="this.pause()"
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                        <div
+                            class="absolute inset-0 bg-darker/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none z-10">
+                            <div
+                                class="w-16 h-16 bg-accent rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-500 shadow-[0_0_20px_rgba(139,92,246,0.6)]">
+                                <i class="fas fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-accent uppercase tracking-wider">Commercial</span>
+                        <h3 class="text-xl font-display font-bold mt-2 mb-2 group-hover:text-accent transition-colors">
+                            Fast Paced Reel</h3>
+                        <p class="text-sm text-gray-400">Featured video editing project showcasing high-quality
+                            production.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 px-6 relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <!-- Bio -->
+                <div class="reveal-left">
+                    <h2 class="text-4xl md:text-5xl font-display font-bold mb-6">Behind the <span
+                            class="text-accent">Edit</span></h2>
+                    <p class="text-gray-400 text-lg mb-6 leading-relaxed">
+                        With over 5 years of experience in digital media, I specialize in bringing visual narratives to
+                        life. I don't just cut clips together; I sculpt stories, manipulate emotion through pacing, and
+                        elevate visuals with precise color grading.
+                    </p>
+                    <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                        Whether it's a 15-second punchy reel or a 30-minute documentary, my goal remains the same:
+                        capturing the audience's attention from the very first frame.
+                    </p>
+
+                    <!-- Software Icons Row -->
+                    <div class="flex flex-wrap gap-4 mt-8">
+                        <div
+                            class="w-12 h-12 rounded-full glass-card flex items-center justify-center text-purple-400 hover:text-white hover:bg-purple-600 transition-colors relative group cursor-default">
+                            <span class="font-bold text-sm">Pr</span>
+                            <span
+                                class="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-gray-800 text-xs px-2 py-1 rounded shadow-lg">Premiere</span>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-full glass-card flex items-center justify-center text-purple-500 hover:text-white hover:bg-purple-700 transition-colors relative group cursor-default">
+                            <span class="font-bold text-sm">Ae</span>
+                            <span
+                                class="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-gray-800 text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">After
+                                Effects</span>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-full glass-card flex items-center justify-center text-blue-400 hover:text-white hover:bg-blue-600 transition-colors relative group cursor-default">
+                            <span class="font-bold text-sm">Ps</span>
+                            <span
+                                class="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-gray-800 text-xs px-2 py-1 rounded shadow-lg">Photoshop</span>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-full glass-card flex items-center justify-center text-orange-400 hover:text-white hover:bg-orange-500 transition-colors relative group cursor-default">
+                            <i class="fas fa-film"></i>
+                            <span
+                                class="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-gray-800 text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">DaVinci
+                                Resolve</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="reveal-right">
+                    <div class="glass-card p-8 rounded-3xl">
+                        <h3 class="text-2xl font-display font-bold mb-6">Skills & Expertise</h3>
+
+                        <div class="space-y-6">
+                            <!-- Skill 1 -->
+                            <div class="skill-bar" data-percent="95">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-medium text-sm md:text-base">Video Editing</span>
+                                    <span class="text-accent font-bold text-sm md:text-base">95%</span>
+                                </div>
+                                <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-accent rounded-full skill-progress" style="width: 0%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Skill 2 -->
+                            <div class="skill-bar" data-percent="85">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-medium text-sm md:text-base">Motion Graphics</span>
+                                    <span class="text-accent font-bold text-sm md:text-base">85%</span>
+                                </div>
+                                <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-accent rounded-full skill-progress" style="width: 0%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Skill 3 -->
+                            <div class="skill-bar" data-percent="90">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-medium text-sm md:text-base">Color Grading</span>
+                                    <span class="text-accent font-bold text-sm md:text-base">90%</span>
+                                </div>
+                                <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-accent rounded-full skill-progress" style="width: 0%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Skill 4 -->
+                            <div class="skill-bar" data-percent="80">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-medium text-sm md:text-base">Sound Design</span>
+                                    <span class="text-accent font-bold text-sm md:text-base">80%</span>
+                                </div>
+                                <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-accent rounded-full skill-progress" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-24 px-6 relative z-10 bg-darker/80 border-t border-white/5">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-4xl md:text-5xl font-display font-bold mb-4">Let's Work <span
+                        class="text-accent">Together</span></h2>
+                <div class="w-24 h-1 bg-accent mx-auto rounded-full mb-6"></div>
+                <p class="text-gray-400 max-w-xl mx-auto">Have a project in mind? Drop me a message and let's create
+                    something amazing.</p>
+            </div>
+
+            <div class="grid md:grid-cols-5 gap-12">
+                <!-- Contact Info -->
+                <div class="md:col-span-2 space-y-8 reveal-left">
+                    <div class="flex items-start space-x-4">
+                        <div
+                            class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center text-accent shrink-0">
+                            <i class="fas fa-envelope text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg mb-1">Email</h4>
+                            <p class="text-gray-400"><a href="mailto:shahaltamash3718@gmail.com"
+                                    class="hover:text-accent transition-colors">shahaltamash3718@gmail.com</a></p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div
+                            class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center text-accent shrink-0">
+                            <i class="fas fa-phone text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg mb-1">Phone</h4>
+                            <p class="text-gray-400"><a href="tel:+918601275375"
+                                    class="hover:text-accent transition-colors">+91 8601275375</a></p>
+                        </div>
+                    </div>
+
+                    <div class="pt-6">
+                        <h4 class="font-bold text-lg mb-4">Follow Me</h4>
+                        <div class="flex space-x-4">
+                            <a href="#"
+                                class="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:bg-accent hover:text-white transition-all transform hover:-translate-y-1 hover:scale-110 cursor-pointer">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#"
+                                class="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:bg-accent hover:text-white transition-all transform hover:-translate-y-1 hover:scale-110 cursor-pointer">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                            <a href="#"
+                                class="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:bg-accent hover:text-white transition-all transform hover:-translate-y-1 hover:scale-110 cursor-pointer">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#"
+                                class="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:bg-accent hover:text-white transition-all transform hover:-translate-y-1 hover:scale-110 cursor-pointer">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="md:col-span-3 reveal-right">
+                    <form id="contact-form" class="glass-card p-8 rounded-3xl" novalidate>
+                        <div class="relative-input">
+                            <input type="text" id="name" required placeholder=" " class="floating-input cursor-text">
+                            <label for="name" class="floating-label">Your Name</label>
+                            <span class="error-msg text-red-500 text-xs hidden absolute -bottom-5 left-2">Name is
+                                required</span>
+                        </div>
+
+                        <div class="relative-input">
+                            <input type="email" id="email" required placeholder=" " class="floating-input cursor-text">
+                            <label for="email" class="floating-label">Email Address</label>
+                            <span class="error-msg text-red-500 text-xs hidden absolute -bottom-5 left-2">Valid email is
+                                required</span>
+                        </div>
+
+                        <div class="relative-input mb-8">
+                            <textarea id="message" required placeholder=" " rows="4"
+                                class="floating-input resize-none cursor-text"></textarea>
+                            <label for="message" class="floating-label">Your Message</label>
+                            <span class="error-msg text-red-500 text-xs hidden absolute -bottom-5 left-2">Message is
+                                required</span>
+                        </div>
+
+                        <button type="submit"
+                            class="w-full py-4 bg-accent text-white rounded-xl font-bold uppercase tracking-wider hover:bg-purple-600 transition-all transform hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] flex justify-center items-center gap-2 cursor-pointer">
+                            <span>Send Message</span>
+                            <i class="fas fa-paper-plane text-sm"></i>
+                        </button>
+
+                        <!-- Success Message -->
+                        <div id="success-msg"
+                            class="hidden mt-4 p-3 bg-green-500/20 border border-green-500/50 text-green-400 rounded-lg text-center text-sm">
+                            Message sent successfully! I'll get back to you soon.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-white/5 text-center relative z-10 bg-darker">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-gray-500 text-sm">&copy; 2024 Altamash. All rights reserved.</p>
+            <a href="#home"
+                class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-accent hover:bg-gray-700 transition-colors cursor-pointer"
+                aria-label="Back to top">
+                <i class="fas fa-arrow-up"></i>
+            </a>
+        </div>
+    </footer>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox"
+        class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <button id="lightbox-close"
+            class="absolute top-6 right-6 text-white hover:text-accent text-3xl transition-colors cursor-pointer w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20">
+            &times;
+        </button>
+        <div class="max-w-5xl w-full" id="lightbox-content">
+            <!-- Used img tag for simplicity, acts as a preview popup -->
+            <video id="lightbox-video" controls autoplay
+                class="w-full h-auto max-h-[75vh] object-contain rounded-lg shadow-2xl mx-auto"></video>
+            <h3 id="lightbox-title" class="text-white text-2xl font-display font-bold mt-4 text-center"></h3>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Custom Cursor Logic ---
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Slight delay for the outline trailing effect
+            setTimeout(() => {
+                cursorOutline.style.left = `${posX}px`;
+                cursorOutline.style.top = `${posY}px`;
+            }, 60);
+        });
+
+        // Add hover effect to interactive elements
+        const hoverElements = document.querySelectorAll('a, button, .portfolio-item, .cursor-pointer, input, textarea');
+        hoverElements.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorOutline.style.width = '50px';
+                cursorOutline.style.height = '50px';
+                cursorOutline.style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorOutline.style.width = '30px';
+                cursorOutline.style.height = '30px';
+                cursorOutline.style.backgroundColor = 'transparent';
+            });
+        });
+
+        // --- Navbar Scroll & Highlight Logic ---
+        const navbar = document.getElementById('navbar');
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        window.addEventListener('scroll', () => {
+            // Navbar Background
+            if (window.scrollY > 50) {
+                navbar.classList.add('glass', 'py-3');
+                navbar.classList.remove('py-5');
+            } else {
+                navbar.classList.remove('glass', 'py-3');
+                navbar.classList.add('py-5');
+            }
+
+            // Active Link Highlighting
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= (sectionTop - 250)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('text-accent');
+                link.classList.add('text-gray-300');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('text-accent');
+                    link.classList.remove('text-gray-300');
+                }
+            });
+        });
+
+        // --- Mobile Menu Toggle ---
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const mobileNav = document.getElementById('mobile-nav');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+        let menuOpen = false;
+
+        function toggleMenu() {
+            menuOpen = !menuOpen;
+            if (menuOpen) {
+                mobileNav.classList.remove('opacity-0', 'pointer-events-none');
+                mobileNav.classList.add('opacity-100', 'pointer-events-auto');
+                menuBtn.innerHTML = '<i class="fas fa-times text-2xl"></i>';
+                document.body.style.overflow = 'hidden';
+            } else {
+                mobileNav.classList.add('opacity-0', 'pointer-events-none');
+                mobileNav.classList.remove('opacity-100', 'pointer-events-auto');
+                menuBtn.innerHTML = '<i class="fas fa-bars text-2xl"></i>';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        menuBtn.addEventListener('click', toggleMenu);
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (menuOpen) toggleMenu();
+            });
+        });
+
+        // --- Typewriter Effect ---
+        const phrases = ["Video Editor.", "Motion Designer.", "Visual Storyteller."];
+        let currentPhrase = 0;
+        let isDeleting = false;
+        let text = '';
+        const typewriterEl = document.getElementById('typewriter');
+
+        function type() {
+            const fullText = phrases[currentPhrase];
+
+            if (isDeleting) {
+                text = fullText.substring(0, text.length - 1);
+            } else {
+                text = fullText.substring(0, text.length + 1);
+            }
+
+            typewriterEl.textContent = text;
+
+            let typeSpeed = 100;
+            if (isDeleting) typeSpeed /= 2;
+
+            if (!isDeleting && text === fullText) {
+                typeSpeed = 2000; // Pause at end of phrase
+                isDeleting = true;
+            } else if (isDeleting && text === '') {
+                isDeleting = false;
+                currentPhrase = (currentPhrase + 1) % phrases.length;
+                typeSpeed = 500; // Pause before typing new phrase
+            }
+
+            setTimeout(type, typeSpeed);
+        }
+        setTimeout(type, 1500); // Initial delay
+
+        // --- Intersection Observer for Scroll Animations ---
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+
+                    // Trigger skill bar animation
+                    if (entry.target.id === 'about' || entry.target.closest('#about')) {
+                        const skillBars = document.querySelectorAll('.skill-progress');
+                        skillBars.forEach(bar => {
+                            const percent = bar.closest('.skill-bar').dataset.percent;
+                            bar.style.width = percent + '%';
+                        });
+                    }
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements
+        document.querySelectorAll('.reveal, .reveal-left, .reveal-right, #about').forEach(el => {
+            observer.observe(el);
+        });
+
+        // --- Portfolio Filtering ---
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const portfolioItems = document.querySelectorAll('.portfolio-item');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active state
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const filterValue = btn.dataset.filter;
+
+                portfolioItems.forEach(item => {
+                    if (filterValue === 'all' || item.dataset.category === filterValue) {
+                        item.classList.remove('hidden-item');
+                        setTimeout(() => item.style.display = 'block', 50);
+                    } else {
+                        item.classList.add('hidden-item');
+                        setTimeout(() => {
+                            if (item.classList.contains('hidden-item')) {
+                                item.style.display = 'none';
+                            }
+                        }, 500);
+                    }
+                });
+            });
+        });
+
+        // --- Lightbox Logic ---
+        const lightbox = document.getElementById('lightbox');
+        const lightboxVideo = document.getElementById('lightbox-video');
+        const lightboxTitle = document.getElementById('lightbox-title');
+        const lightboxClose = document.getElementById('lightbox-close');
+
+        window.openLightbox = (imgSrc, title) => {
+            lightboxVideo.src = imgSrc;
+            lightboxVideo.play();
+            lightboxTitle.textContent = title;
+            lightbox.classList.add('open');
+            document.body.style.overflow = 'hidden'; // Stop background scrolling
+        };
+
+        function closeLightbox() {
+            lightbox.classList.remove('open');
+            document.body.style.overflow = 'auto';
+            // Clear src after fade out to stop any media playing if it was a video
+            if (lightboxVideo.src) lightboxVideo.pause();
+            setTimeout(() => { lightboxVideo.src = ''; }, 300);
+        }
+
+        lightboxClose.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', (e) => {
+            // Close if clicking outside the content
+            if (e.target === lightbox || e.target.id === 'lightbox-content') {
+                closeLightbox();
+            }
+        });
+
+        // Escape key to close lightbox
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && lightbox.classList.contains('open')) {
+                closeLightbox();
+            }
+        });
+
+        // --- Form Validation & Submission ---
+        const form = document.getElementById('contact-form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            let isValid = true;
+
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const messageInput = document.getElementById('message');
+
+            const validateInput = (input, isEmail = false) => {
+                const errorMsg = input.parentElement.querySelector('.error-msg');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!input.value.trim() || (isEmail && !emailRegex.test(input.value))) {
+                    errorMsg.classList.remove('hidden');
+                    input.style.borderColor = '#ef4444'; // Tailwind red-500
+                    return false;
+                } else {
+                    errorMsg.classList.add('hidden');
+                    input.style.borderColor = 'rgba(255,255,255,0.2)';
+                    return true;
+                }
+            };
+
+            const isNameValid = validateInput(nameInput);
+            const isEmailValid = validateInput(emailInput, true);
+            const isMessageValid = validateInput(messageInput);
+
+            isValid = isNameValid && isEmailValid && isMessageValid;
+
+            if (isValid) {
+                const name = encodeURIComponent(nameInput.value);
+                const email = encodeURIComponent(emailInput.value);
+                const msg = encodeURIComponent(messageInput.value);
+
+                const whatsappText = `Hello Altamash,%0A%0AMy name is ${name}.%0AEmail: ${email}%0A%0AMessage:%0A${msg}`;
+                const whatsappUrl = `https://wa.me/918601275375?text=${whatsappText}`;
+
+                window.open(whatsappUrl, '_blank');
+
+                form.reset();
+                document.getElementById('success-msg').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('success-msg').classList.add('hidden');
+                }, 5000);
+            }
+        });
+
+        // Clear error styling on input
+        ['name', 'email', 'message'].forEach(id => {
+            const input = document.getElementById(id);
+            input.addEventListener('input', () => {
+                input.parentElement.querySelector('.error-msg').classList.add('hidden');
+                input.style.borderColor = 'rgba(255,255,255,0.2)';
+            });
+        });
+    </script>
+</body>
+
+</html>
