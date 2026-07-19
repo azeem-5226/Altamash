@@ -492,13 +492,20 @@
   </netflixintro>
 </div>
 <script>
-  setTimeout(() => {
-    const overlay = document.getElementById('netflix-intro-overlay');
-    if(overlay) {
-      overlay.style.opacity = '0';
-      setTimeout(() => overlay.remove(), 1000);
+  const overlay = document.getElementById('netflix-intro-overlay');
+  if (overlay) {
+    if (!sessionStorage.getItem('introPlayed')) {
+      // First time visit in this session
+      sessionStorage.setItem('introPlayed', 'true');
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 1000);
+      }, 4000);
+    } else {
+      // Already played in this session, remove immediately
+      overlay.remove();
     }
-  }, 4000);
+  }
 </script>
 
 
